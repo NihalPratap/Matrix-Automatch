@@ -1,0 +1,7 @@
+This is how you set-up Automatch :-
+1) Delete the tables 'temp_%' from automatch database(unless you are running on  different criteria)
+2) Truncate the "matching_result" table. It would be better if you rename the old result table as  'matching_result_1[or whatever else you wish to]' 
+		and create a new "matching_result" table.
+3) Set the automatch_status column to '-1' in Unique SIUID PACS for all those records which you wish to have automatched.
+
+You are now  ready. Go to the screen(Start one if there isn't one) and fire the script!

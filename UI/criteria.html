@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Matrix Automatch</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/clean-blog.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+
+    <!-- HTML5 Shim and Respond.js IE8 support of HTML5 elements and media queries -->
+    <!-- WARNING: Respond.js doesn't work if you view the page via file:// -->
+    <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+    <![endif]-->
+
+</head>
+
+    
+    <script src="elastic/angular.js"></script>
+    <script src="elastic/angular.js"></script>
+    <script src="elastic/elasticsearch.angular.js"></script>
+    <script src="elastic/elasticsearch.js"></script>
+  <!-- app code starts is here -->
+  <script>
+    // App module
+    //
+    // The app module will contain all of the components the app needs (directives,
+    // controllers, services, etc.). Since it will be using the components within
+    // the elasticsearch module, define it a dependency.
+    var ExampleApp = angular.module('ExampleApp', ['elasticsearch']);
+
+    // Service
+    //
+    // esFactory() creates a configured client instance. Turn that instance
+    // into a service so that it can be required by other parts of the application
+    ExampleApp.service('client', function (esFactory) {
+      return esFactory({
+        host: 'http://localhost:9200',
+        apiVersion: '2.2',
+        log: 'trace'
+      });
+    });
+      
+      
+       ExampleApp.controller('ExampleController', function ($scope, client, esFactory) {
+    client.search({
+    index: 'automatch_testing',
+    type:'standard_matching_criteria',
+    size: 50,
+    body: {
+    "query":
+        {
+            "match_all":{}   
+        },
+    }
+       
+    }).then(function (response) {
+      $scope.hits = response.hits.hits;
+	console.log($scope.hits);
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+// if the err is a NoConnections error, then the client was not able to
+// connect to elasticsearch. In that case, create a more detailed error
+// message
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+
+    });
+    
+      
+ ExampleApp.controller('NewController', function ($scope, client, esFactory) {
+$scope.update = function(){
+    var name1 = angular.element(document.querySelector('#cid'));
+ var cri1 = angular.element(document.querySelector('#cri'));
+      $scope.name = name1;
+      $scope.cri = cri1;
+    console.log("called");
+client.index({
+  index: 'automatch_testing',
+  type: 'standard_matching_criteria',
+  body: {
+    criteria: '{{name1}}',
+    criteria_cols: '{{cri1}}',
+    is_active: true
+  }
+}, function (error, response) {
+    console.log("error"+error);
+});
+}
+    });
+    
+      
+    </script>
+    
+    
+    
+    
+    
+<body ng-app="ExampleApp">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="index.html">Seyfert Solutions</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="home.html">Home</a>
+                    </li>
+                    <li>
+                        <a href="about.html">About</a>
+                    </li>
+                    <li>
+                        <a href="criteria.html">Criterias</a>
+                    </li>
+                    <li>
+                        <a href="contact.html">Contact</a>
+                    </li>
+                     <li>
+                        <a href="start.html">Log Out</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header class="intro-header" style="background-image: url('img/post-bg.jpg')">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="post-heading">
+                        <h1>Your Current Criteria's</h1>
+                        <hr class="small">
+                        <h2 class="subheading">You can Add or Remove any of Your Criteria's</h2>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Post Content -->
+    <article>
+        <div class="container">
+            <div class="row">
+                <div class="panel-heading text-center"><strong><p style="font-size:30px;">HERE ARE YOUR CRITERIA'S</p></strong></div>
+                <div class="panel-body">
+                <div ng-controller="ExampleController">                
+                <table class="table table-striped table-fixed" style="height: 10px;overflow-y: auto;">
+                	    <tr>
+                    <th class="col-xs-3"> Criteria ID     </th>
+                    <th class="col-xs-9"> Criteria's       </th>
+                <tbody>
+                    <tr ng-repeat="doc in hits">
+                       <td > {{ doc._source.criteria}} </td>
+                       <td > {{ doc._source.criteria_cols }}</td>
+                       </tr>
+                </tbody>
+                </table>
+                
+            </div>
+                    
+                </div>
+            </div>
+           <!-- <div>
+                <p  class="text-center" style="font-size:30px;"><strong>Want to Add or Delete a Criteria???</strong></p>
+                <div class="row">
+                    
+                   
+                         <div class="container text-center">
+                        <label for="id1">Criteria ID:</label><input type="text" placeholder="Enter Criteria ID" id="id1"/></br>
+                        <label for="id2">Criteria:</label><input type="text" style="margin-left:23px;" placeholder="Enter Criteria" /><div class="alert alert-info" style="font-size:19px;"><strong>Note! </strong>Please delimit the Criteria with a semicolon</div>
+                     <div class="call-to-action">
+                         
+                    <a class="btn btn-default btn-xl wow tada">ADD</a>
+                        </div>
+                    </div>
+               
+            </div></br></br></br>
+                    <div class="row">
+                        <div class="container text-center">
+                            <label>Criteria ID:</label><input type="text" placeholder="Enter Criteria ID to Delete"/></br></br>
+                        
+                        <div class="call-to-action">                        
+                        <a class="btn btn-default btn-xl wow tada">DELETE</a>
+                        </div>
+                </div>
+                    </div>                       
+                </div>
+            <!--<div ng-controller="NewController">
+                <input type="text" id="cid" value="998"/>
+                <input type="text" id="cri" value="nihal"/>
+                <button type="submit" name="submit" ng-click="update()"></button>
+            </div>-->
+            
+        </div>
+    </article>
+
+    <hr>
+<footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <ul class="list-inline text-center">
+                        <li>
+                            <a href="#">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                    <p class="copyright text-muted">Copyright &copy; Seyfert Solutions</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+   
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="js/clean-blog.min.js"></script>
+
+</body>
+
+</html>

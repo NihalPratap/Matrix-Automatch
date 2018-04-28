@@ -1,0 +1,286 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+         xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+    <modelVersion>4.0.0</modelVersion>
+    <groupId>com.secant</groupId>
+    <artifactId>matrix-automatch_ES</artifactId>
+    <packaging>jar</packaging>
+    <version>1.2</version>
+    <name>matrix-automatch_ES</name>
+
+    <organization>
+        <name>Secant Healthcare</name>
+        <url>http://www.secanthealthcare.com</url>
+    </organization>
+    
+    <properties>
+        <spring.version>4.1.6.RELEASE</spring.version>
+    </properties>
+
+    <!-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Start : All Dependency Descriptions $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ -->
+    <dependencies>
+        <!-- ######################################## START : Database Drivers ######################### -->
+        <dependency>
+            <groupId>mysql</groupId>
+            <artifactId>mysql-connector-java</artifactId>
+            <version>5.1.35</version>
+        </dependency>
+        <!-- ######################################## END : Database Drivers ######################### -->
+        <!-- ######################################## START : Logging libraries ######################### -->
+        <dependency>
+            <groupId>log4j</groupId>
+            <artifactId>log4j</artifactId>
+            <version>99-empty</version>
+        </dependency>
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-classic</artifactId>
+            <version>1.0.3</version>
+        </dependency>
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>jcl-over-slf4j</artifactId>
+            <version>1.6.4</version>
+        </dependency>
+        <!-- ######################################## END : Logging libraries ######################### -->
+        <!-- ######################################## START : Apache Commons ######################### -->
+        <dependency>
+            <groupId>commons-logging</groupId>
+            <artifactId>commons-logging</artifactId>
+            <version>99-empty</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-dbcp</groupId>
+            <artifactId>commons-dbcp</artifactId>
+            <version>1.4</version>
+        </dependency>
+        <dependency>
+            <groupId>commons-pool</groupId>
+            <artifactId>commons-pool</artifactId>
+            <version>1.5</version>
+            <exclusions>
+                <exclusion>
+                    <groupId>xerces</groupId>
+                    <artifactId>xerces</artifactId>
+                </exclusion>
+            </exclusions>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.poi</groupId>
+            <artifactId>poi</artifactId>
+            <version>3.6</version>
+        </dependency>
+        <!-- ######################################## END : Apache Commons ######################### -->
+        <!-- ######################################## START: Spring Packages ######################### -->
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-core</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-orm</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-beans</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework</groupId>
+            <artifactId>spring-context</artifactId>
+            <version>${spring.version}</version>
+        </dependency>
+        <!-- ######################################## End: Spring Packages ######################### -->
+        <!-- ######################################## START: Mybatis Packages ######################### -->
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis</artifactId>
+            <version>3.3.0</version>
+        </dependency>
+        
+        <dependency>
+            <groupId>org.mybatis</groupId>
+            <artifactId>mybatis-spring</artifactId>
+            <version>1.2.2</version>
+        </dependency>
+
+        <!-- ######################################## END: Mybatis ######################### -->
+        <!--################################### START: Liquibase ###########################-->
+        <dependency>
+            <groupId>org.liquibase</groupId>
+            <artifactId>liquibase-maven-plugin</artifactId>
+            <version>3.3.5</version> 
+        </dependency>
+        <dependency>
+            <groupId>org.apache.maven.plugins</groupId>
+            <artifactId>maven-jar-plugin</artifactId>
+            <version>2.6</version>
+        </dependency>    
+        <!--################################### END Liquibase    ###########################-->
+        <!-- ######################################## START: Codehaus ######################### -->
+        <dependency>
+            <groupId>org.codehaus.mojo</groupId>
+            <artifactId>properties-maven-plugin</artifactId>
+            <version>1.0-alpha-2</version>
+        </dependency>
+        <!--################################### End: Codehaus ###########################-->
+        <!-- ######################################## START: junit Packages ######################### -->
+        <dependency>
+            <groupId>junit</groupId>
+            <artifactId>junit</artifactId>
+            <version>4.12</version>
+            <scope>test</scope>
+        </dependency>
+        <!-- ######################################## End: junit Packages ######################### -->        
+        <!-- ######################################## Start: runtime Packages ######################### -->
+        <dependency>
+            <groupId>javax.servlet</groupId>
+            <artifactId>jstl</artifactId>
+            <version>1.2</version>
+            <scope>runtime</scope>
+        </dependency>
+        <!-- ##############################ES dependency ######################################-->
+        <dependency>
+            <groupId>org.elasticsearch</groupId>
+            <artifactId>elasticsearch</artifactId>
+            <version>2.3.3</version>
+            <type>jar</type>
+        </dependency>
+        
+        <!-- http://mvnrepository.com/artifact/org.elasticsearch.plugin/delete-by-query -->
+        <dependency>
+            <groupId>org.elasticsearch.plugin</groupId>
+            <artifactId>delete-by-query</artifactId>
+            <version>2.3.3</version>
+        </dependency>
+
+        
+        <!-- ######################################## Start: runtime Packages ######################### -->
+        <dependency>
+            <groupId>io.searchbox</groupId>
+            <artifactId>jest-common</artifactId>
+            <version>2.0.0</version>
+            <type>jar</type>
+        </dependency>
+<!--        <dependency>
+            <groupId>com.secant</groupId>
+            <artifactId>matrix-dcmpath2elastic</artifactId>
+            <version>1.2</version>
+            <type>jar</type>
+        </dependency>-->
+    </dependencies>
+    <!-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ End : All Dependency Descriptions $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ -->
+    
+    <!-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Start : All Repository Descriptions $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ -->
+    <repositories>
+        <!-- ######################################## Start: Maven Repository Location ######################### -->
+        <repository>
+            <snapshots>
+            </snapshots>
+            <id>central</id>
+            <name>Maven Repository Switchboard</name>
+            <url>http://repo1.maven.org/maven2</url>
+        </repository>
+        <!-- ######################################## End: Maven Repository Location ######################### -->
+        <!-- ######################################## Start: Repository serving Empty Artifacts ######################### -->
+        <repository>
+            <id>version99</id>
+            <url>http://version99.qos.ch/</url>
+        </repository>
+        <!-- ######################################## End: Repository serving Empty Artifacts ######################### -->
+    </repositories>
+    <!-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ End : All Repository Descriptions $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ -->
+
+    <!-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Start : All Plugin Repository Descriptions $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ -->
+    <pluginRepositories>
+        <pluginRepository>
+            <id>maven-plugins</id>
+            <name>Maven Plugin Repository</name>
+            <url>http://repo1.maven.org/maven2</url>
+            <snapshots>
+            </snapshots>
+            <releases>
+            </releases>
+        </pluginRepository>
+    </pluginRepositories>
+    <!-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ End : All Plugin Repository Descriptions $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ -->
+    
+    <!-- $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ Start : Project Build Description $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ -->    
+    <build>
+        <resources>
+            <resource>
+                <directory>${project.basedir}/src/main/resources</directory>
+                <includes>
+                    <include>**/*</include>
+                </includes>
+            </resource>
+        </resources>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>2.6</version>
+                <configuration>
+                    <archive>
+                        <manifest>
+                            <addClasspath>true</addClasspath>
+                            <classpathPrefix>lib/</classpathPrefix>
+                            <mainClass>com.secant.match.main</mainClass>
+                        </manifest>
+                        <manifestEntries>
+                            <Class-Path>application.properties</Class-Path>
+                        </manifestEntries>
+                    </archive>
+                </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>2.0.2</version>
+                <configuration>
+                    <source>1.6</source>
+                    <target>1.6</target>
+                </configuration>
+            </plugin>
+            <plugin>
+                <artifactId>maven-assembly-plugin</artifactId>
+                <executions>
+                    <execution>
+                        <goals>
+                            <goal>assembly</goal>
+                        </goals>
+                        <phase>package</phase>
+                    </execution>
+                </executions>
+                <configuration>
+                    <descriptors>
+                        <descriptor>src/main/resources/assembly.xml</descriptor>
+                    </descriptors>
+                </configuration>
+            </plugin>
+            <!-- plugin to read external properties file value -->            
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>properties-maven-plugin</artifactId>
+                <version>1.0-alpha-2</version>
+                <executions>
+                    <execution>
+                        <phase>initialize</phase>
+                        <goals>
+                            <goal>read-project-properties</goal>
+                        </goals>
+                        <configuration>
+                            <files>
+                                <file>${project.basedir}/src/main/resources/application.properties</file>
+                            </files>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>            
+           
+        </plugins>
+    </build>
+</project>
+
+

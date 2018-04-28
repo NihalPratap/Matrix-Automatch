@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+
+    
+    
+    <input type="checkbox" ng-model="checked" aria-label="Toggle ngHide">
+    <div class="check-element animate-show" ng-show="checked">
+    
+    
+    
+    
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Matrix Automatch</title>
+
+
+
+   
+
+</head>
+    <script src="elastic/angular.js"></script>
+    <script src="elastic/elasticsearch.angular.js"></script>
+    <script src="elastic/elasticsearch.js"></script>
+    
+
+  <script>
+
+    var ExampleApp = angular.module('ExampleApp', ['elasticsearch']);
+//<!--############################################ get ES client ###########################################-->
+    ExampleApp.service('client', function (esFactory) {
+      return esFactory({
+        host: 'http://localhost:9200',
+        apiVersion: '2.2',
+        log: 'trace'
+      });
+    });
+
+
+  
+      
+      //<!--############################################ controller for matching count ###########################################-->
+    ExampleApp.controller('MatchController', function ($scope, client, esFactory) {
+         $scope.index = '';
+        $scope.type = '';
+            $scope.key = '';
+        $scope.rang = 10;
+       
+    $scope.click = function(){
+            console.log("entered");
+    
+     console.log($scope.index);
+     console.log($scope.type);
+     console.log($scope.key);
+    client.search({
+    index: ($scope.index),
+    type:($scope.type),
+    size: 50,
+    body: {
+    "query":
+        {
+            "match": {
+                
+                name: ($scope.key)
+            }   
+        },
+    }
+       
+    }).then(function (response) {
+      $scope.hits = response.hits.hits;
+	console.log($scope.hits);
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+    }
+    
+     /*   $scope.index1 = '';
+        $scope.type1 = '';
+        $scope.id1= '';*/
+    
+var range = [];
+for(var i=0;i<10000000000;i++) {
+  range.push(i);
+}
+$scope.range = range
+    
+ $scope.clicker = function(index1,type1,id1){
+     console.log(id1);
+    console.log(id1);
+     console.log(index1);
+     console.log(type1);
+    client.update({
+    index: (index1),
+    type:(type1),
+    id: (id1),
+  body: {
+    doc:{// put the partial document under the `doc` key
+      name: 'nihal'
+    }
+  }
+}, function (error, response) {
+  console.log(response);
+});
+ }
+
+    });
+      
+  </script>
+    
+    <body ng-app="ExampleApp" ng-controller="MatchController">
+    <input type="text" ng-model="index"  id="index" /> <br><br>
+    <input type="text" ng-model="type"  id="type" /><br><br>
+    <input type="text" ng-model="key"   id="key" /><br><br>
+    <input type="button" value="search" ng-click="click()">
+        <p>output</p>
+        {{ index }}
+        {{ type }}
+        {{ key }}
+        <div  ng-repeat="hit in hits">
+        {{hit}}
+    <input type="text" value="{{hit._index}}" ng-model="index1" id="index1" /> <br><br>
+    <input type="text" value="{{hit._type}}" ng-model="type1"  id="type1" /><br><br>
+    <input type="text" value="{{hit._id}}" ng-model="id1"   id="id1" /><br><br>
+   <input type="button" value="update" ng-click="clicker(hit._index,hit._type,hit._id)">     
+     <p>output</p>
+        {{ index1 }}
+        {{ type1 }}
+        {{ id1 }}
+        </div>
+   
+
+    <!-- jQuery -->
+    <script src="js/jquery.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="js/clean-blog.min.js"></script>
+
+</body>
+
+</html>

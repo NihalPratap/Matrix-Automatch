@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+ <!--  For assistance related to logback-translator or configuration  -->
+ <!--  files in general, please contact the logback user mailing list -->
+ <!--  at http://www.qos.ch/mailman/listinfo/logback-user             -->
+ <!--                                                                 -->
+ <!--  For professional support please see                            -->
+ <!--     http://www.qos.ch/shop/products/professionalSupport         -->
+ <!--                                                                 -->
+
+<configuration>
+
+<appender name="stdout" class="ch.qos.logback.core.ConsoleAppender">
+
+    <encoder>
+        <pattern>%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+</appender>
+
+<appender name="appLogFile" class="ch.qos.logback.core.rolling.RollingFileAppender">
+ <!-- See also http://logback.qos.ch/manual/appenders.html#RollingFileAppender -->
+    <File>logs/automatch.log</File>
+
+    <encoder>
+        <pattern>[automatch] %d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n</pattern>
+    </encoder>
+
+    <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+        <maxIndex>1000</maxIndex>
+        <FileNamePattern>logs/automatch.log.%i</FileNamePattern>
+    </rollingPolicy>
+
+    <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+        <MaxFileSize>5120KB</MaxFileSize>
+    </triggeringPolicy>
+</appender>
+
+<logger name="com.secant" level="INFO">
+    <appender-ref ref="appLogFile" />
+</logger>
+
+<logger name="org.apache.commons" level="ERROR">
+    <appender-ref ref="appLogFile" />
+</logger>
+
+<logger name="java.sql" level="ERROR">
+    <appender-ref ref="appLogFile" />
+</logger>
+
+<logger name="o.s.orm" level="ERROR">
+    <appender-ref ref="appLogFile" />
+</logger>
+
+<logger name="o.s.b.f.s" level="ERROR">
+    <appender-ref ref="appLogFile" />
+</logger>
+
+<logger name="org.dcm4che2" level="INFO">
+    <appender-ref ref="appLogFile" />
+</logger>
+
+<root level="DEBUG">
+    <appender-ref ref="stdout" />
+</root>
+</configuration>

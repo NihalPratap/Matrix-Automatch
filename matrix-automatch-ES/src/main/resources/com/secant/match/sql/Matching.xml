@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="windows-1252"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+
+<mapper namespace="Matching">
+    
+    <resultMap id="getAllCriteriaMap" type="Criteria">
+        <result property="criteriaID" column="criteria"/>
+        <result property="criterias" column="criteria_cols"/>
+    </resultMap>
+
+    <resultMap id="getTotalMatchMap" type="Result">
+        <result property="totalMatch" column="total_match"/>
+    </resultMap>
+
+
+    <select id="getAllCriteria" resultMap="getAllCriteriaMap">
+        select criteria, criteria_cols from standard_matching_criteria where is_active=1 order by 1
+    </select>
+ 
+    <select id="getTableColumn" resultType="Columns">
+        select concat('p.',pacs_table_column,'=','r.',ris_table_column) as conditions, pacs_table_column as pacsColumn, ris_table_column as risColumn
+        from criteria_field_map where criteria_column=#{criteriaCol} limit 1
+    </select>
+ 
+<!--    <update id="createPACSIndex" parameterType="Criteria">
+        create index temp_index_pacs_${criteriaNumber} on unq_siuid_pacs(${pacsCols})
+    </update>
+
+    <update id="createRISIndex" parameterType="Criteria">
+        create index temp_index_ris_${criteriaNumber} on sot(${risCols})
+    </update>-->
+
+    <update id="createTableOnMatching" parameterType="Criteria">
+        create table temp_${criteriaID} as select p.pacs_id, r.id from unq_siuid_pacs p,sot r
+        where p.automatch_status='-1' and ${tableCondition}
+    </update>
+
+    <update id="updatePACS" parameterType="Criteria">
+        update unq_siuid_pacs p, temp_${criteriaID} t set p.automatch_status=#{criteriaID}
+        where p.automatch_status='-1' and p.pacs_id=t.pacs_id
+    </update>
+
+    <select id="getTotalMatch" parameterType="Criteria" resultMap="getTotalMatchMap">
+        select ifnull(count(distinct pacs_id), 0) as total_match from temp_${criteriaID}
+    </select>
+    <!--
+    <update id="createResultPACS" parameterType="Criteria">
+        create table temp_$criteriaID$_pacs as SELECT pacs_id, count(id) as ris_count FROM temp_$criteriaID$ group by 1;
+    </update>
+
+    <update id="createResultRIS" parameterType="Criteria">
+        create table temp_$criteriaID$_ris as SELECT id, count(pacs_id) as pacs_count FROM temp_$criteriaID$ group by 1
+    </update>
+   
+   -->
+    <insert id="insertMatchingResult" parameterType="Result">
+        insert into matching_result (criteria_fk, total_match, one_to_one, one_to_many, many_to_one, many_to_many)
+        value(#{criteria_fk},#{totalMatch},#{oneToOne},#{oneToMany},#{manyToOne},#{manyToMany})
+    </insert>
+
+<!--    <update id="dropPACSIndex" parameterType="Criteria">
+        ALTER IGNORE TABLE indexing_db.unq_siuid_pacs DROP INDEX temp_index_pacs 
+        ALTER TABLE unq_siuid_pacs DROP INDEX temp_index_pacs_#{criteriaNumber} 
+       
+    </update>
+
+    <update id="dropRISIndex" parameterType="Criteria">
+        ALTER IGNORE TABLE indexing_db.sot DROP INDEX temp_index_ris 
+       ALTER TABLE sot DROP INDEX temp_index_ris_#{criteriaNumber}
+    </update>-->
+
+
+    <!--
+    Following queries for filtering the results like One-One, One-Many and Many-One
+    Added by Anil.
+    -->
+    <update id="alterCritTable" parameterType="Criteria">
+        ALTER TABLE temp_${criteriaID} ADD COLUMN `matching` VARCHAR(5) DEFAULT NULL,
+                                      ADD INDEX `PACS_INDEX`(`pacs_id`),
+                                      ADD INDEX `RIS_INDEX`(`id`)
+    </update>
+
+    <update id="resetCriteriaTable" parameterType="Criteria">
+        UPDATE temp_${criteriaID} SET matching = null
+    </update>
+
+    <update id="dropTempTables" parameterType="Criteria">
+        DROP TABLE IF EXISTS onetomany,manytoone
+    </update>
+
+    <update id="ManyToOneTable" parameterType="Criteria">
+        CREATE TABLE manytoone (SELECT id FROM temp_${criteriaID} WHERE matching IS NULL GROUP BY id HAVING COUNT(pacs_id) > 1)
+    </update>
+
+<!--    <update id="ManyToOneTableIndex" parameterType="Criteria">
+        ALTER TABLE manytoone ADD INDEX `RIS_INDEX`(id)
+    </update>-->
+
+    <update id="updateManyToOneResults" parameterType="Criteria">
+        UPDATE temp_${criteriaID} t, manytoone m SET t.matching = 'MO' WHERE t.id = m.id
+    </update>
+
+    <update id="OneToManyTable" parameterType="Criteria">
+        CREATE TABLE onetomany (SELECT pacs_id FROM temp_${criteriaID} WHERE matching IS NULL GROUP BY pacs_id HAVING COUNT(id) > 1)
+    </update>
+<!--    <update id="OneToManyTableIndex" parameterType="Criteria">
+        ALTER TABLE onetomany ADD INDEX `RIS_INDEX`(pacs_id)
+    </update>-->
+
+    <update id="updateOneToManyResults" parameterType="Criteria">
+        UPDATE temp_${criteriaID} t, onetomany o SET t.matching = 'OM' WHERE t.pacs_id = o.pacs_id
+    </update>
+
+    <update id="updateOneToOneResults" parameterType="Criteria">
+        UPDATE temp_${criteriaID} SET matching = 'OO' WHERE matching IS NULL
+    </update>
+
+    <select id="getOneToOne" parameterType="Criteria" resultType="java.lang.String">
+        SELECT ifnull(count(distinct(pacs_id)), 0) as result FROM temp_${criteriaID} where matching='OO'
+    </select>
+
+    <select id="getOneToMany" parameterType="Criteria" resultType="java.lang.String">
+        SELECT ifnull(count(distinct(pacs_id)), 0) as result FROM temp_${criteriaID} where matching='OM'
+    </select>
+
+    <select id="getManyToOne" parameterType="Criteria" resultType="java.lang.String">
+        SELECT ifnull(count(distinct(pacs_id)), 0) as result FROM temp_${criteriaID} where matching='MO'
+    </select>
+</mapper>

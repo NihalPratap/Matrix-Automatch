@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="">
+    <meta name="author" content="">
+
+    <title>Matrix Automatch</title>
+
+    <!-- Bootstrap Core CSS -->
+    <link href="css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Custom CSS -->
+    <link href="css/clean-blog.min.css" rel="stylesheet">
+
+    <!-- Custom Fonts -->
+    <link href="http://maxcdn.bootstrapcdn.com/font-awesome/4.1.0/css/font-awesome.min.css" rel="stylesheet" type="text/css">
+    <link href='http://fonts.googleapis.com/css?family=Lora:400,700,400italic,700italic' rel='stylesheet' type='text/css'>
+    <link href='http://fonts.googleapis.com/css?family=Open+Sans:300italic,400italic,600italic,700italic,800italic,400,300,600,700,800' rel='stylesheet' type='text/css'>
+      <script src="js/Chart.bundle.js"></script>
+        <!-- jQuery -->
+     <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery/2.1.3/jquery.min.js"></script>
+
+    <!-- Bootstrap Core JavaScript -->
+    <script src="js/bootstrap.min.js"></script>
+
+    <!-- Custom Theme JavaScript -->
+    <script src="js/clean-blog.min.js"></script>
+
+  
+   
+
+</head>
+    <script src="elastic/angular.js"></script>
+    <script src="elastic/elasticsearch.angular.js"></script>
+    <script src="elastic/elasticsearch.js"></script>
+       <script src="js/Chart.bundle.js"></script>
+   
+
+    <style>
+    #canvas-holder {
+        width: 100%;
+        margin-top: 50px;
+        text-align: center;
+    }
+    #chartjs-tooltip {
+      opacity: 1;
+      position: absolute;
+      background: rgba(0, 0, 0, .7);
+      color: white;
+      border-radius: 3px;
+      -webkit-transition: all .1s ease;
+      transition: all .1s ease;
+      pointer-events: none;
+      -webkit-transform: translate(-50%, 0);
+      transform: translate(-50%, 0);
+    }
+
+    .chartjs-tooltip-key {
+      display: inline-block;
+      width: 10px;
+      height: 10px;
+    }
+    </style>
+    
+    <script>
+    
+    
+           $(document).ready(function() {    
+        var $submit = $("#submit_prog").hide(),
+            $cbs = $('input[name="prog"]').click(function() {
+                $submit.toggle( $cbs.is(":checked") );
+            });    
+    });
+    
+    </script>
+    
+    
+    
+  <script>
+
+    var ExampleApp = angular.module('ExampleApp', ['elasticsearch']);
+//<!--############################################ get ES client ###########################################-->
+    ExampleApp.service('client', function (esFactory) {
+      return esFactory({
+        host: 'http://localhost:9200',
+        apiVersion: '2.2',
+        log: 'trace'
+      });
+    });
+
+
+    //<!--############################################ controller to fetch result ###########################################-->
+    ExampleApp.controller('ExampleController', function ($scope, client, esFactory) {
+    client.search({
+    index: 'automatch_testing',
+    
+    size: 90000,
+    body: {
+    "query":
+        {
+            "match": {
+                t_match:"matched"   
+                
+            }   
+        },
+    }
+       
+    }).then(function (response) {
+      $scope.hits = response.hits.hits;
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+// if the err is a NoConnections error, then the client was not able to
+// connect to elasticsearch. In that case, create a more detailed error
+// message
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+        
+        
+        
+    client.search({
+    index: 'automatch_testing',
+    size: 90000,
+    body: {
+    "query":
+        {
+            "match_all": {
+                 
+                
+            }   
+        },
+    }
+       
+    }).then(function (response) {
+      $scope.dhits = response.hits.hits;
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+// if the err is a NoConnections error, then the client was not able to
+// connect to elasticsearch. In that case, create a more detailed error
+// message
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+
+    });
+      
+      
+//<!--############################################ controller for matching count ###########################################-->
+      
+    ExampleApp.controller('MatchController', function ($scope, client, esFactory) {
+    $scope.total = 0;
+    client.search({
+    index: 'automatch_testing',
+    type:'matching_result',
+    size: 90000,
+    body: {
+    "query":
+        {
+            "match_all": {}   
+        },
+    }
+       
+    }).then(function (response) {
+      $scope.cthits = response.hits.hits;
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+// if the err is a NoConnections error, then the client was not able to
+// connect to elasticsearch. In that case, create a more detailed error
+// message
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+
+    });
+      
+//<!--############################################ controller for Manytoone ###########################################-->
+      
+      ExampleApp.controller('Manytoone', function ($scope, client, esFactory) {
+          
+        
+     client.search({         
+    index: 'automatch_testing',
+    size:90000,
+    body: {
+  "query": {
+    "match": {
+      matching: "MO"
+    }
+  }, 
+  
+  "size": 0, 
+  "aggs":{
+    "by_id":{
+      "terms": {
+        field: "t_id"
+        
+      },
+      "aggs": {
+        "tops": {
+          "top_hits": {
+            size : 90000
+          }
+        }
+      }
+    }
+  },
+    }
+       
+    }).then(function (response) {
+        $scope.fhits = response.aggregations.by_id.buckets;	
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+    
+    
+$scope.update = function(index1,type1,id1){
+    client.update({
+    index: (index1),
+    type:(type1),
+    id: (id1),
+  body: {
+    doc:{// put the partial document under the `doc` key
+      matching: 'OO'
+    }
+  }
+}, function (error, response) {
+  console.log(response);
+});
+ }
+});
+      
+//<!--###################################################### controller for onetomany ##########################################-->
+      
+    ExampleApp.controller('Onetomany', function ($scope, client, esFactory) {        
+     client.search({         
+    index: 'automatch_testing',
+         size:90000,
+    body: {
+  "query": {
+    "match": {
+      matching: "OM"
+    }
+  }, 
+  
+  "size": 0, 
+  "aggs":{
+    "by_id":{
+      "terms": {
+        field: "t_pacs_id"
+        
+      },
+      "aggs": {
+        "tops": {
+          "top_hits": {
+            size : 90000
+          }
+        }
+      }
+    }
+  },
+    }
+       
+    }).then(function (response) {
+        $scope.result = response.aggregations.by_id.buckets;	
+        console.log(response.aggregations.by_id.buckets);
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+    
+    
+$scope.update = function(index1,type1,id1){
+    client.update({
+    index: (index1),
+    type:(type1),
+    id: (id1),
+  body: {
+    doc:{// put the partial document under the `doc` key
+      matching: 'OO'
+    }
+  }
+}, function (error, response) {
+  console.log(response);
+});
+ }
+});
+//<!--################################################### chart controller ##########################################
+          ExampleApp.controller('chart', function ($scope, client, esFactory) {
+    $scope.total = 1;
+    client.search({
+    index: 'automatch_testing',
+    type:'total_matching_result',
+    id :'total',
+    size: 90000,
+    body: {
+    "query":
+        {
+            "match_all": {}   
+        },
+    }
+       
+    }).then(function (response) {
+        $scope.chart = response.hits.hits[0];
+        $scope.total = $scope.chart._source.total_match;
+        $scope.onetone = $scope.chart._source.one_to_one;
+        $scope.manytoone = $scope.chart._source.many_to_one;
+        $scope.onetomany = $scope.chart._source.one_to_many;
+        $scope.total_docs = $scope.chart._source.unmatched_docs;
+        
+        
+        
+//################################## chart script ###############################################3
+        
+         Chart.defaults.global.tooltips.custom = function(tooltip) {
+
+    	// Tooltip Element
+      var tooltipEl = $('#chartjs-tooltip');
+
+      if (!tooltipEl[0]) {
+        $('body').append('<div id="chartjs-tooltip"></div>');
+        tooltipEl = $('#chartjs-tooltip');
+      }
+
+      // Hide if no tooltip
+      if (!tooltip.opacity) {
+        tooltipEl.css({
+          opacity: 0
+        });
+        $('.chartjs-wrap canvas')
+          .each(function(index, el) {
+            $(el).css('cursor', 'default');
+          });
+        return;
+      }
+
+      $(this._chart.canvas).css('cursor', 'pointer');
+
+      // Set caret Position
+      tooltipEl.removeClass('above below no-transform');
+      if (tooltip.yAlign) {
+        tooltipEl.addClass(tooltip.yAlign);
+      } else {
+        tooltipEl.addClass('no-transform');
+      }
+
+      // Set Text
+      if (tooltip.body) {
+        var innerHtml = [
+          (tooltip.beforeTitle || []).join('\n'), (tooltip.title || []).join('\n'), (tooltip.afterTitle || []).join('\n'), (tooltip.beforeBody || []).join('\n'), (tooltip.body || []).join('\n'), (tooltip.afterBody || []).join('\n'), (tooltip.beforeFooter || [])
+          .join('\n'), (tooltip.footer || []).join('\n'), (tooltip.afterFooter || []).join('\n')
+        ];
+        tooltipEl.html(innerHtml.join('\n'));
+      }
+
+      // Find Y Location on page
+      var top = 0;
+      if (tooltip.yAlign) {
+        if (tooltip.yAlign == 'above') {
+          top = tooltip.y - tooltip.caretHeight - tooltip.caretPadding;
+        } else {
+          top = tooltip.y + tooltip.caretHeight + tooltip.caretPadding;
+        }
+      }
+
+      var position = $(this._chart.canvas)[0].getBoundingClientRect();
+
+      // Display, position, and set styles for font
+      tooltipEl.css({
+        opacity: 1,
+        width: tooltip.width ? (tooltip.width + 'px') : 'auto',
+        left: position.left + tooltip.x + 'px',
+        top: position.top + top + 'px',
+        fontFamily: tooltip._fontFamily,
+        fontSize: tooltip.fontSize,
+        fontStyle: tooltip._fontStyle,
+        padding: tooltip.yPadding + 'px ' + tooltip.xPadding + 'px',
+      });
+    };
+    var config3 = {
+        type: 'pie',
+        data: {
+            datasets: [{
+                data: [$scope.onetomany, $scope.onetone, $scope.manytoone],
+                backgroundColor: [
+                    "#3498DB",
+                    "#F4D03F",
+                    "#9B59B6"
+                   
+                ],
+            }],
+            labels: [
+                "one to many",
+                "one to one",
+                "many to one"
+            
+            ]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                display: true
+            },
+            tooltips: {
+                enabled: true,
+            }
+        }
+    };
+        
+    var config2 = {
+        type: 'pie',
+        data: {
+            datasets: [{
+                data: [$scope.total, $scope.total_docs],
+                backgroundColor: [
+                    "#EC7063",
+                    "#95A5A6",
+                   
+                ],
+            }],
+            labels: [
+                "total documents matched",
+                "total unmatched documents",
+            
+            ]
+        },
+        options: {
+            responsive: true,
+            legend: {
+                display: true
+            },
+            tooltips: {
+                enabled: true,
+            }
+        }
+    };
+
+    window.onload = function() {
+        var ctx1 = document.getElementById("chart-area3").getContext("2d");
+        window.myPie = new Chart(ctx1, config3);
+
+        var ctx2 = document.getElementById("chart-area2").getContext("2d");
+        window.myPie = new Chart(ctx2, config2);
+    };
+        
+//################################################### end of chart script ##############################################  
+        
+    }).catch(function (err) {
+	$scope.clusterState = null;
+	$scope.error = err;
+// if the err is a NoConnections error, then the client was not able to
+// connect to elasticsearch. In that case, create a more detailed error
+// message
+if (err instanceof esFactory.errors.NoConnections) {
+$scope.error = new Error('Unable to connect to elasticsearch. ' +
+'Make sure that it is running and listening at http://localhost:9200');
+}
+});
+    });
+  </script>
+   
+<!--//###################################################### script to remove row ##############################################-->
+<script type="text/javascript">
+    
+ $(document).on('click','#update',function(){
+        $(this).parents('tr').remove();
+      });
+
+</script>
+    
+    
+<style>
+/* Tooltip container */
+
+
+/* Tooltip text */
+.tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: black;
+    color: #fff;
+    text-align: center;
+    padding: 5px 0;
+    border-radius: 6px;
+ 
+    /* Position the tooltip text - see examples below! */
+    position: absolute;
+    z-index: 1;
+}
+
+/* Show the tooltip text when you mouse over the tooltip container */
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+}
+</style>
+    
+<body  ng-app="ExampleApp">
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-default navbar-custom navbar-fixed-top">
+        <div class="container-fluid">
+            <!-- Brand and toggle get grouped for better mobile display -->
+            <div class="navbar-header page-scroll">
+                <button type="button" class="navbar-toggle" data-toggle="collapse" data-target="#bs-example-navbar-collapse-1">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <a class="navbar-brand" href="home.html">Seyfert Solutions</a>
+            </div>
+
+            <!-- Collect the nav links, forms, and other content for toggling -->
+            <div class="collapse navbar-collapse" id="bs-example-navbar-collapse-1">
+                <ul class="nav navbar-nav navbar-right">
+                    <li>
+                        <a href="home.html">Home</a>
+                    </li>
+                    <li>
+                        <a href="about.html">About</a>
+                    </li>
+                    <li>
+                        <a href="criteria.html">Criterias</a>
+                    </li>
+                    <li>
+                        <a href="contact.html">Contact</a>
+                    </li>
+                      <li>
+                        <a href="start.html">Log Out</a>
+                    </li>
+                </ul>
+            </div>
+            <!-- /.navbar-collapse -->
+        </div>
+        <!-- /.container -->
+    </nav>
+
+    <!-- Page Header -->
+    <!-- Set your background image for this header on the line below. -->
+    <header class="intro-header" style="background-image: url('img/home-bg.jpg')">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <div class="site-heading">
+                        <h1>Automatch Results</h1>
+                        <hr class="small">
+                        <span class="subheading"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Content -->
+    <div class="container">
+        <div class="row">
+            
+        </div>
+    </div>
+    <div class="container">
+    <ul class="nav nav-tabs" role="tablist">
+        
+        
+        <li class="active"><a href="#tabs-first" role="tab" data-toggle="tab">Results</a></li>
+       
+         <li><a href="#tabs-second" role="tab" data-toggle="tab">Matching Count</a></li>
+        
+        <li><a href="#tabs-third" role="tab" data-toggle="tab">Many To One</a></li>
+        
+        <li><a href="#tabs-fourth" role="tab" data-toggle="tab">One To Many</a></li>
+        <li><a href="#tabs-fifth" role="tab" data-toggle="tab">Charts</a></li>
+    </ul>
+    <div class="tab-content">
+    
+        <!--############################################start of first tab###########################################-->
+        <div class="active tab-pane fade in" id="tabs-first" style=";overflow-y:auto;">
+            <div ng-controller="ExampleController">
+                
+                <table class="table table-fixed" style="overflow-y: auto;border-bottom-width: 0;float:left;">
+                	    <thead style="width:97%;"><tr>
+                    <th class="col-xs-3"> Criteria      </th>
+                    <th class="col-xs-3"> Pacs_ID       </th>
+                    <th class="col-xs-3"> ID            </th>
+                    <th class="col-xs-3"> Matching Type </th>
+                </tr></thead>
+                <tbody style="width:100%;height:500px;">
+                    <tr ng-repeat="doc in hits">
+                        <td> <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ doc._source.UICriteria}} </button>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item">{{ doc._source.t_criteria }}</a>
+                            </div>
+                            </div>
+                            </td>
+                        <td> {{ doc._source.t_pacs_id }} </td>
+                        <td> {{ doc._source.t_id }}      </td>
+                        <td> {{ doc._source.matching }}  </td>
+                    </tr>
+                </tbody>
+                </table>
+                
+            </div>
+         </div>   
+        <!--############################################end of first tab###########################################-->
+         
+         <!--############################################start of second tab###########################################-->                
+        <div class="tab-pane fade" id="tabs-second" ng-controller="MatchController">
+                 <table class="table table-striped table-fixed" style="height: 10px;overflow-y: auto;">
+                	    <tr>
+                    <th class="col-xs-2"> Criteria    </th>
+                    <th class="col-xs-2"> Total Match </th>
+                    <th class="col-xs-2"> One To One  </th>
+                    <th class="col-xs-2"> One To Many </th>
+                    <th class="col-xs-2"> Many To One </th>
+                </tr>
+                <tbody>
+                    <tr ng-repeat="hit in cthits">
+                        <td > {{ hit._source.criteria_fk}} </td>
+                        <td > {{ hit._source.total_match }}</td>
+                        <td > {{ hit._source.one_to_one }} </td>
+                        <td > {{ hit._source.one_to_many }}</td>
+                        <td > {{ hit._source.many_to_one }}</td>
+                       </tr>
+                </tbody>
+                </table>
+            
+        </div>
+        <!--############################################end of second tab###########################################-->
+        
+         <!--############################################start of third tab###########################################-->
+        
+            <div class="tab-pane fade" id="tabs-third" ng-controller="Manytoone">
+                 <table class="table table-striped table-fixed" style="height: 10px;overflow-y: auto;" id="mans">
+                	    <tr>
+                    <th class="col-xs-2"> Criteria    </th>
+                    <th class="col-xs-2"> RIS_ID </th>
+                    <th class="col-xs-2"> PACS_ID  </th>
+                    
+                </tr>
+                <tbody>
+                    <tr ng-repeat="hit in fhits">
+                              <td> <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ hit.tops.hits.hits[0]._source.UICriteria }} </button>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item">{{ hit.tops.hits.hits[0]._source.t_criteria }}</a>
+                            </div>
+                            </div>
+                            </td>
+                        <td class="tooltip"> {{ hit.key }} <p>{{ hit.tops.hits.hits[0]._source.t_ris_info }}</p></td>
+                       <td>
+                            <div ng-repeat="hits in hit.tops.hits">
+                                <div ng-repeat="rhit in hits">
+                                 <input type="checkbox" ng-model="checked" aria-label="Toggle ngHide">
+                                    {{rhit._source.t_pacs_id}} <p>{{ rhit._source.t_pacs_info }}</p>
+                                    <div class="check-element animate-show" ng-show="checked">
+                                        <input type="button" id="update" style="float:right;"class="btn btn-success" value="update" ng-click="update(rhit._index,rhit._type,rhit._id)"/>
+                                    </div>
+                                    <br>
+                                    <br>
+                                </div>
+                            </div>  
+                        </td>
+                    </tr>
+                </tbody>
+                </table>
+        </div>
+      
+        
+        <!--############################################ end of third tab ###########################################-->
+        
+        <!--############################################ start of fourth tab ###########################################-->
+        
+         <div class="tab-pane fade" id="tabs-fourth" ng-controller="Onetomany">
+                 <table class="table table-striped table-fixed" style="height: 10px;overflow-y: auto;">
+                	    <tr>
+                    <th class="col-xs-2"> Criteria    </th>
+                    <th class="col-xs-2"> PACS_ID </th>
+                    <th class="col-xs-2"> RIS_ID  </th>
+                    
+                </tr>
+                <tbody>
+                    <tr ng-repeat="hit in result">
+                              <td> <div class="btn-group">
+                            <button type="button" class="btn btn-primary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">{{ hit.tops.hits.hits[0]._source.UICriteria }} </button>
+                            <div class="dropdown-menu">
+                                <div class="dropdown-divider"></div>
+                                <a class="dropdown-item">{{ hit.tops.hits.hits[0]._source.t_criteria }}</a>
+                            </div>
+                            </div>
+                            </td>
+                        <td > {{ hit.key }}  <p>{{ hit.tops.hits.hits[0]._source.t_pacs_info }}</p></td>
+                       <td>
+                            <div ng-repeat="hits in hit.tops.hits">
+                                <div ng-repeat="rhit in hits">
+                                    <input type="checkbox" ng-model="checked" aria-label="Toggle ngHide">
+                                    {{rhit._source.t_id}} <p>{{ rhit._source.t_ris_info }}</p>
+                                    <div class="check-element animate-show" ng-show="checked">
+                                        <input type="button" style="float:right;"class="btn btn-success" id="update" value="update" ng-click="update(rhit._index,rhit._type,rhit._id)"/>
+                                    </div>
+                                    <br>
+                                    <br>
+                                </div>
+                            </div>  
+                        </td>
+                    </tr>
+                </tbody>
+                </table>
+        </div>
+        
+        <!--############################################ end of fourth tab ###########################################-->
+        
+          <!--############################################ start of fifth tab ###########################################-->
+        
+<div class="tab-pane fade" id="tabs-fifth" ng-controller="chart">
+            
+    <div class="row">
+        <div class="col-md-6">
+    <div id="canvas-holder" style="width: 300px;">
+        <canvas id="chart-area2" width="300" height="300" />
+    </div><br>
+    <label for="chart-area2" style="margin-left:85px;">Total Matched</label>
+    </div>
+    <div class="col-md-6">
+    <div id="canvas-holder" style="width: 300px;">
+        <canvas id="chart-area3" width="300" height="300" />
+    </div><br>
+    <label for="chart-area3" style="margin-left:85px;">Types of Matches</label>
+    </div>
+     </div>
+    <div id="chartjs-tooltip"></div>
+
+
+    <script>
+    
+    </script>
+</div>
+        
+        <!--############################################ end of fifth tab ###########################################-->
+        
+        
+     
+        </div>
+    </div>
+    
+    
+
+    <!-- Footer -->
+
+    <footer>
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-8 col-lg-offset-2 col-md-10 col-md-offset-1">
+                    <ul class="list-inline text-center">
+                        <li>
+                            <a href="#">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-twitter fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-facebook fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                        <li>
+                            <a href="#">
+                                <span class="fa-stack fa-lg">
+                                    <i class="fa fa-circle fa-stack-2x"></i>
+                                    <i class="fa fa-github fa-stack-1x fa-inverse"></i>
+                                </span>
+                            </a>
+                        </li>
+                    </ul>
+                    <p class="copyright text-muted">Copyright &copy;Seyfert Solutions</p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+</body>
+
+</html>
